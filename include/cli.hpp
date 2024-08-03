@@ -16,6 +16,8 @@ public:
     int sun;
     std::thread uiThread;
     std::atomic<bool> uiRunning;
+    str buffer;
+    str previousBuffer; // Previous buffer to check for changes
 
     void run(); // Start the CLI interface
 private:
@@ -48,8 +50,8 @@ private:
     void shovel(Coordinate& navigator);
     
     void printInterface();
-    void printMenuOption(Option currentSelection, Option option, ref<str> text);
-    void printLawnRow(int laneIndex);
+    void printMenuOption(std::ostringstream& oss, Option currentSelection, Option option, ref<str> text);
+    void printLawnRow(std::ostringstream& oss, int laneIndex);
 
     void clearScreen();
     void resetUI();

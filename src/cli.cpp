@@ -4,6 +4,7 @@
 #include <iostream>
 #include <conio.h> // For _getch()
 
+
 using namespace te;
 
 CLI::CLI() : Game(), sun(0), uiRunning(true),
@@ -19,27 +20,29 @@ CLI::~CLI() {
 }
 
 void CLI::clearScreen() {
-    std::cout << "\033[2J\033[1;1H" << std::flush;
-    std::cout << "\033[3J" << std::flush;
+    cout << "\033[2J\033[1;1H" << "\033[3J";
 }
 
 void CLI::resetUI() {
-    clearScreen();
     printInterface();
 }
 
 void CLI::updateUI() {
-    currentSelection = getCurrentSelection();
+    using namespace std::chrono;
+    auto nextUpdate = steady_clock::now();
+    const auto updateInterval = seconds(1); // Adjust this interval as needed
+
     while (uiRunning) {
-        Time::sleep(0.001);
-        resetUI();
-        Time::sleep(4.999);
+        nextUpdate += updateInterval;
+        printInterface();
+        std::this_thread::sleep_until(nextUpdate);
     }
 }
 
 void CLI::printInterface() {
     int sun = getSun();
     str adaptiveBlank;
+    std::ostringstream oss;
 
     if (sun >= 100) { 
         adaptiveBlank = "         "; 
@@ -48,58 +51,71 @@ void CLI::printInterface() {
     } else {
         adaptiveBlank = "           " ; 
     }
-    clearScreen();
+    oss << "\033[2J\033[1;1H";
     //   Sun: 150         --+---+---+---+---+---+---+---+---+---+
-    cout << "  Sun: " << sun << adaptiveBlank;
-    lawn.lineSeparator();
+    oss << "  Sun: " << sun << adaptiveBlank;
+
+    oss << "--+---+---+---+---+---+---+---+---+---+" << "\n";
 
     // > Sunflower        M | S |   | P |   |   |   |   |   |   |
-    printMenuOption(currentSelection, OPTION_PLANT1,
+    printMenuOption(oss, currentSelection, OPTION_PLANT1,
         "Sunflower        ");
-    printLawnRow(0);
+    printLawnRow(oss, 0);
 
     //   Escape Root      --+---+---+---+---+---+---+---+---+---+
-    printMenuOption(currentSelection, OPTION_PLANT2, 
+    printMenuOption(oss, currentSelection, OPTION_PLANT2, 
         "Escape Root      ");
-    lawn.lineSeparator();
+        
+    oss << "--+---+---+---+---+---+---+---+---+---+" << "\n";
 
     //   Peashooter       M | S |   | P |   |   |   |   |   |   |
-    printMenuOption(currentSelection, OPTION_PLANT3, 
+    printMenuOption(oss, currentSelection, OPTION_PLANT3, 
         "Peashooter       ");
-    printLawnRow(1);
+    printLawnRow(oss, 1);
 
     //   Cherry Bomb      --+---+---+---+---+---+---+---+---+---+
-    printMenuOption(currentSelection, OPTION_PLANT4, 
+    printMenuOption(oss, currentSelection, OPTION_PLANT4, 
         "Cherry Bomb      ");
-    lawn.lineSeparator();
+
+    oss << "--+---+---+---+---+---+---+---+---+---+" << "\n";
 
     //   Wall-Nut         M |   |   | P |   |   |   |   |   |   |
-    printMenuOption(currentSelection, OPTION_PLANT5, 
+    printMenuOption(oss, currentSelection, OPTION_PLANT5, 
         "Wall-Nut         ");
-    printLawnRow(2);
+    printLawnRow(oss, 2);
 
     //                    --+---+---+---+---+---+---+---+---+---+
-    cout << "                   "; // Blank Space
-    lawn.lineSeparator();
+    oss << "                   "; // Blank Space
+
+    oss << "--+---+---+---+---+---+---+---+---+---+" << "\n";
 
     //                    M | S |   |   |   |   |   |   |   |   |
-    cout << "                   "; // Blank Space
-    printLawnRow(3);
+    oss << "                   "; // Blank Space
+    printLawnRow(oss, 3);
 
     //   Swap Escape Root --+---+---+---+---+---+---+---+---+---+
-    printMenuOption(currentSelection, OPTION_SWAP_ESCAPE_ROOT, 
+    printMenuOption(oss, currentSelection, OPTION_SWAP_ESCAPE_ROOT, 
         "Swap Escape Root ");
-    lawn.lineSeparator();
+
+    oss << "--+---+---+---+---+---+---+---+---+---+" << "\n";
 
     //   Shovel           M |   |   |   |   |   |   |   |   |   |
-    printMenuOption(currentSelection, OPTION_SHOVEL, 
+    printMenuOption(oss, currentSelection, OPTION_SHOVEL, 
         "Shovel           ");
-    printLawnRow(4);
+    printLawnRow(oss, 4);
 
     //   Exit             --+---+---+---+---+---+---+---+---+---+
-    printMenuOption(currentSelection, OPTION_EXIT, 
+    printMenuOption(oss, currentSelection, OPTION_EXIT, 
         "Exit             ");
-    lawn.lineSeparator();
+
+    oss << "--+---+---+---+---+---+---+---+---+---+" << "\n";
+
+    buffer = oss.str();
+
+    if (buffer != previousBuffer) { // Check if the buffer has changed
+        cout << buffer; // Clear screen and print buffer content
+        previousBuffer = buffer; // Update previous buffer
+    }
 } 
 /* Output:
   Sun: 150         --+---+---+---+---+---+---+---+---+---+
@@ -115,16 +131,56 @@ void CLI::printInterface() {
 > Exit             --+---+---+---+---+---+---+---+---+---+
 */
 
-void CLI::printMenuOption(Option currentSelection,
+void CLI::printMenuOption(std::ostringstream& oss, 
+                          Option currentSelection,
                           Option givenOption, ref<str> text) {
-    cout << (currentSelection == givenOption ? "> " : "  ") << text;
+    // Define color constants
+    const str RESET_COLOR   = "\033[0m";
+    const str YELLOW        = "\033[38;2;255;255;0m";
+    const str REDDISH_BROWN = "\033[38;2;255;69;19m";
+    const str GREEN         = "\033[38;2;0;255;0m";
+    const str RED           = "\033[38;2;255;0;0m";
+    const str BROWN         = "\033[38;2;139;69;19m";
+    const str GRAY          = "\033[38;2;128;128;128m";
+
+    // Define colors for specific options using RGB
+    str color;
+    switch (givenOption) {
+        case OPTION_PLANT1: // Sunflower
+            color = YELLOW;
+            break;
+        case OPTION_PLANT2: // Escape Root
+        case OPTION_SWAP_ESCAPE_ROOT:
+            color = REDDISH_BROWN;
+            break;
+        case OPTION_PLANT3: // Peashooter
+            color = GREEN;
+            break;
+        case OPTION_PLANT4: // Cherry Bomb
+            color = RED;
+            break;
+        case OPTION_PLANT5: // Wall-Nut
+            color = BROWN;
+            break;
+        case OPTION_SHOVEL: // Shovel
+            color = GRAY;
+            break;
+        default:
+            color = RESET_COLOR; // Default color
+            break;
+    }
+
+    // Highlight selected option
+    oss << (currentSelection == givenOption ? "> " : "  ") 
+        << (currentSelection == givenOption ? color : RESET_COLOR) 
+        << text << RESET_COLOR;
 }
 
-void CLI::printLawnRow(int laneIndex) {
+void CLI::printLawnRow(std::ostringstream& oss, int laneIndex) {
     for (int tileIndex : lawn.tileIndices(laneIndex)) {
-        cout << lawn.getSymbol(Coordinate(laneIndex, tileIndex)) << " | ";
+        oss << lawn.getSymbol(Coordinate(laneIndex, tileIndex)) << " | ";
     }
-    cout << "\n";
+    oss << "\n";
 }
 
 

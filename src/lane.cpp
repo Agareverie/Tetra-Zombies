@@ -25,5 +25,5 @@ void Lane::print() const {
     for (te::ref<te::str> tile : tiles) {
         te::cout << tile << " | ";
     }
-    te::cout << te::endl; 
+    te::cout << "\n"; 
 }

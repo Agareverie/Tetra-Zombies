@@ -5,7 +5,7 @@ using namespace te;
 Lawn::Lawn() : lawn(5) {}
 
 void Lawn::lineSeparator() const {
-    cout << "--+---+---+---+---+---+---+---+---+---+" << endl;
+    cout << "--+---+---+---+---+---+---+---+---+---+" << "\n";
 }
 
 Coordinate Lawn::getCoordinates(ref<str> symbol) const {
