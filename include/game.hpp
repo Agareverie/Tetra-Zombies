@@ -6,6 +6,7 @@
 #include "../tetra/optional.hpp"
 
 #include "coordinate.hpp"
+#include "zombie.hpp"
 #include "lane.hpp"
 #include "lawn.hpp"
 
@@ -13,6 +14,8 @@
 #include <chrono>
 #include <atomic>
 #include <mutex>
+#include <random>
+
 
 using namespace te;
 
@@ -23,12 +26,12 @@ private:
     std::atomic<bool> isRunning;
     std::mutex sunMutex;
     int sun;
+    Array<Zombie> zombies;  // Container to manage zombies
 
 public:
     Game();  // Constructor
-
-protected:
-    virtual ~Game(); // Destructor
+    ~Game();
+    Lawn& getLawn(); // Add this method if needed
 
 public:
     void start();
@@ -36,15 +39,14 @@ public:
 
     virtual void incrementSunCount();
     int getSun();
+    void summonZombie(std::mt19937& rng);
+    ref<Array<Zombie>> getZombies();
 
     void place(Lawn& lawn, ref<Coordinate> coord, ref<str> symbol);
     void shovelTile(Lawn& lawn, ref<Coordinate> coord);
     // Game wrappers for Lawn
     void swap(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB);
     void trail(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB);
-
-protected:
-    Lawn& getLawn(); // Add this method if needed
 };
 
 #endif // GAME_HPP

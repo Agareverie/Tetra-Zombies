@@ -6,8 +6,8 @@
 
 using namespace te;
 
-CLI::CLI() : Game(), sun(0), uiRunning(true), navigator(0, 1),
-    currentSelection(OPTION_PLANT1), lawn(), navigatingLawn(false) {
+CLI::CLI(Game& gameInstance) : game(gameInstance), sun(0), uiRunning(true), navigator(0, 1),
+    currentSelection(OPTION_PLANT1), navigatingLawn(false) {
     uiThread = std::thread(&CLI::updateUI, this);
 }
 
@@ -22,7 +22,7 @@ void CLI::updateUI() {
     int clock;
     while (uiRunning) {
         printInterface();
-        Time::sleep(5);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 }
 
@@ -33,7 +33,7 @@ int CLI::digits(int sun) {
 void CLI::printInterface() {
     // Dealing with sun
     std::ostringstream sunstream;
-    sun = getSun();
+    sun = game.getSun();
 
     str padding(12 - digits(sun), ' ');
     sunstream << "\r" << "  Sun: " << sun << padding;
@@ -138,8 +138,8 @@ str CLI::getLane(int laneIndex, Coordinate& navigator) {
     // Define lane component
     std::ostringstream lane;
 
-    for (int tileIndex : lawn.tileIndices(laneIndex)) {
-        str symbol = lawn.getSymbol(Coordinate(laneIndex, tileIndex));
+    for (int tileIndex : game.getLawn().tileIndices(laneIndex)) {
+        str symbol = game.getLawn().getSymbol(Coordinate(laneIndex, tileIndex));
         str color = RESET_COLOR;
         // Logic for the Navigator ("o") Symbol and its colors
         if (navigatingLawn) {
@@ -214,11 +214,11 @@ void CLI::navigateLawn(Option action) {
 void CLI::plant(Coordinate& navigator, ref<str> symbol) {
     printInterface();
 
-    if (lawn.getSymbol(navigator) != " ") {
+    if (game.getLawn().getSymbol(navigator) != " ") {
         cout << "Cannot plant on a non-blank symbol.\n";
         Time::sleep(0.25);
     } else {
-        lawn.replace(navigator, symbol);
+        game.getLawn().replace(navigator, symbol);
         printInterface();
     }
 }
@@ -226,7 +226,7 @@ void CLI::plant(Coordinate& navigator, ref<str> symbol) {
 void CLI::shovel(Coordinate& navigator) {
     printInterface();
 
-    str symbol = lawn.getSymbol(navigator);
+    str symbol = game.getLawn().getSymbol(navigator);
     if (symbol == " ") {
         cout << "Nothing to shovel at this spot.\n";
         Time::sleep(0.25);
@@ -247,7 +247,7 @@ void CLI::swapEscapeRoot(Coordinate& navigator) {
     while (running) {
         printInterface();
 
-        if (lawn.getSymbol(originalNavigator) != "E") {
+        if (game.getLawn().getSymbol(originalNavigator) != "E") {
             cout << "No Escape Root at the current position.\n";
             Time::sleep(0.25);
             break;
@@ -272,16 +272,16 @@ void CLI::swapEscapeRoot(Coordinate& navigator) {
             navigator = target; // Move navigator to the target position 
         } else if (ch == ENTER_KEY) {
             // Perform the swap operation
-            if (lawn.getSymbol(originalNavigator) != "E") {
+            if (game.getLawn().getSymbol(originalNavigator) != "E") {
                 cout << "No Escape Root at the current position.\n";
                 Time::sleep(0.25);
 
-            } else if (lawn.getSymbol(target) == "M") {
+            } else if (game.getLawn().getSymbol(target) == "M") {
                 cout << "Cannot swap with the lawn mower.\n";
                 Time::sleep(0.25);
 
             } else {
-                lawn.swap(originalNavigator, target);
+                game.getLawn().swap(originalNavigator, target);
                 printInterface();
             }
             running = false; // Exit the loop after swapping
@@ -292,6 +292,12 @@ void CLI::swapEscapeRoot(Coordinate& navigator) {
 }
 
 void CLI::run() {
+    std::random_device rd;
+    std::mt19937 rng(rd());
+
+    // Summon zombies at random intervals or events
+    game.summonZombie(rng);
+    game.summonZombie(rng);
     bool running = true;
 
     while (running) {

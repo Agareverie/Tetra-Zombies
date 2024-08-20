@@ -6,10 +6,10 @@
 
 using namespace te;
 
-class CLI : public Game {
+class CLI {
 public:
 
-    CLI();
+    CLI(Game& gameInstance);
 
     virtual ~CLI();
 
@@ -52,6 +52,8 @@ private:
         OPTION_EXIT,
         OPTION_COUNT
     };
+
+    Game& game;
 
     // Functions to render components
     int digits(int sun);

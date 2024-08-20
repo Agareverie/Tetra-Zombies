@@ -50,10 +50,11 @@ using namespace te;
 int main() {
     Time time;
     auto start_time = time.time();
+    
+    Game game;
 
-    time.sleep(1);
-
-    CLI cli;
+    // Pass the Game instance to CLI
+    CLI cli(game);
 
     cli.run();
 

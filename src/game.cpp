@@ -22,6 +22,28 @@ void Game::incrementSunCount() {
 int Game::getSun() {
     return sun;
 }
+
+void Game::summonZombie(std::mt19937& rng) {
+    std::uniform_int_distribution<int> laneDist(0, 4);
+
+    int laneIndex = laneDist(rng);
+    int tileIndex = 9;
+
+    Coordinate zombieCoord = Coordinate(laneIndex, tileIndex);
+    Zombie newZombie = Zombie(zombieCoord, 5); // Example HP
+    
+    if (lawn.getSymbol(zombieCoord) == " ") {
+        // Create a new Zombie and place it on the lawn
+        Zombie newZombie(zombieCoord, 100); // Example HP value
+        zombies.push_back(newZombie); // Add zombie to the game
+        lawn.replace(zombieCoord, "Z"); // Place zombie symbol on the lawn
+    }
+}
+
+ref<Array<Zombie>> Game::getZombies() {
+    return zombies;
+}
+
 void Game::start() {
     if (!isRunning) {
         cout << "Game is not running!" << "\n";
