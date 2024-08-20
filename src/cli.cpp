@@ -19,14 +19,10 @@ CLI::~CLI() {
 }
 
 void CLI::updateUI() {
-    using namespace std::chrono;
-    auto nextUpdate = steady_clock::now();
-    const auto updateInterval = seconds(1); // Adjust this interval as needed
-
+    int clock;
     while (uiRunning) {
-        nextUpdate += updateInterval;
         printInterface();
-        std::this_thread::sleep_until(nextUpdate);
+        Time::sleep(5);
     }
 }
 
@@ -36,11 +32,11 @@ int CLI::digits(int sun) {
 
 void CLI::printInterface() {
     // Dealing with sun
-    int sun = getSun();
     std::ostringstream sunstream;
+    sun = getSun();
 
-    str adaptiveBlank(12 - digits(sun), ' ');
-    sunstream << "  Sun: " << sun << adaptiveBlank;
+    str padding(12 - digits(sun), ' ');
+    sunstream << "\r" << "  Sun: " << sun << padding;
     str displaySun = sunstream.str();
 
     // Getting Option components
@@ -217,33 +213,30 @@ void CLI::navigateLawn(Option action) {
 
 void CLI::plant(Coordinate& navigator, ref<str> symbol) {
     printInterface();
-    std::cout << "Planting (\"" << symbol << "\") at ";
-    navigator.print();
-    std::cout << std::endl;
 
     if (lawn.getSymbol(navigator) != " ") {
-        std::cout << "Cannot plant on a non-blank symbol.\n";
+        cout << "Cannot plant on a non-blank symbol.\n";
+        Time::sleep(0.25);
     } else {
-        place(lawn, navigator, symbol); // Place "E" at the selected coordinate
+        lawn.replace(navigator, symbol);
+        printInterface();
     }
-    Time::sleep(0.25);
 }
 
 void CLI::shovel(Coordinate& navigator) {
     printInterface();
-    cout << "Shoveling at ";
-    navigator.print();
-    cout << endl;
 
     str symbol = lawn.getSymbol(navigator);
     if (symbol == " ") {
         cout << "Nothing to shovel at this spot.\n";
+        Time::sleep(0.25);
     } else if (symbol == "M") {
         cout << "Cannot shovel the lawn mower at this spot.\n";
+        Time::sleep(0.25);
     } else {
-        shovelTile(lawn, navigator); // Remove the symbol
+        lawn.replace(navigator, " "); // Remove the symbol
+        printInterface();
     }
-    Time::sleep(0.25);
 }
 
 void CLI::swapEscapeRoot(Coordinate& navigator) {
@@ -259,16 +252,6 @@ void CLI::swapEscapeRoot(Coordinate& navigator) {
             Time::sleep(0.25);
             break;
         }
-
-        cout << "Swapping Escape Root (\"E\") at ";
-        originalNavigator.print();
-        cout << " with position ";
-        target.print();
-
-        cout << ".\nUse arrow keys to move the target.\n";
-        cout << "Press Enter to swap or Esc to cancel.\n";
-
-        
 
         int ch = _getch();
         if (ch == ARROW_PREFIX) {
@@ -291,14 +274,16 @@ void CLI::swapEscapeRoot(Coordinate& navigator) {
             // Perform the swap operation
             if (lawn.getSymbol(originalNavigator) != "E") {
                 cout << "No Escape Root at the current position.\n";
+                Time::sleep(0.25);
 
             } else if (lawn.getSymbol(target) == "M") {
                 cout << "Cannot swap with the lawn mower.\n";
+                Time::sleep(0.25);
 
             } else {
-                swap(lawn, originalNavigator, target);
+                lawn.swap(originalNavigator, target);
+                printInterface();
             }
-            Time::sleep(0.25);
             running = false; // Exit the loop after swapping
         } else if (ch == ESCAPE_KEY) {
             running = false; // Exit the loop without swapping
@@ -327,13 +312,7 @@ void CLI::run() {
         } else if (ch == ENTER_KEY) {
             // Execute the selected option
             switch (currentSelection) {
-                case OPTION_PLANT1:
-                case OPTION_PLANT2:
-                case OPTION_PLANT3:
-                case OPTION_PLANT4:
-                case OPTION_PLANT5:
-                case OPTION_SWAP_ESCAPE_ROOT:
-                case OPTION_SHOVEL:
+                default:
                     navigateLawn(currentSelection);
                     break;
                 case OPTION_EXIT:

@@ -51,6 +51,8 @@ int main() {
     Time time;
     auto start_time = time.time();
 
+    time.sleep(1);
+
     CLI cli;
 
     cli.run();

@@ -14,53 +14,50 @@ Game::~Game() {
 
 void Game::incrementSunCount() {
     while (isRunning) {
-        Time::sleep(5); // Wait for 5 seconds
-        
-        std::lock_guard<std::mutex> lock(sunMutex);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         sun += 25; // Increment sun count
     }
 }
 
 int Game::getSun() {
-    std::lock_guard<std::mutex> lock(sunMutex);
     return sun;
 }
 void Game::start() {
     if (!isRunning) {
-        cout << "Game is not running!" << endl;
+        cout << "Game is not running!" << "\n";
         return;
     }
-    cout << "Game started!" << endl;
+    cout << "Game started!" << "\n";
     lawn.print();
 }
 
 void Game::endGame() {
     if (isRunning) {
         isRunning = false;
-        cout << "Game Over!" << endl;
+        cout << "Game Over!" << "\n";
     }
 }
 
 void Game::place(Lawn& lawn, ref<Coordinate> coord, ref<str> symbol) {
     if (!isRunning) {
-        cout << "Game is not running!" << endl;
+        cout << "Game is not running!" << "\n";
         return;
     }
     lawn.replace(coord, symbol);
     cout << "Placed \"" << symbol << "\" at ";
     coord.print();
-    cout << endl;
+    cout << "\n";
 }
 
 void Game::shovelTile(Lawn& lawn, ref<Coordinate> coord) {
     if (!isRunning) {
-        cout << "Game is not running!" << endl;
+        cout << "Game is not running!" << "\n";
         return;
     }
     lawn.replace(coord, " ");
     cout << "Shovelled tile" << " at ";
     coord.print();
-    cout << endl;
+    cout << "\n";
 }
 
 void Game::swap(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB) {
@@ -70,7 +67,7 @@ void Game::swap(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB) {
     coordA.print();
     cout << " with \"" << lawn.getSymbol(coordA) << "\" at ";
     coordB.print();
-    cout << endl;
+    cout << "\n";
 }
 
 void Game::trail(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB) {
@@ -78,7 +75,7 @@ void Game::trail(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB) {
 
     cout << "Moved \"" << lawn.getSymbol(coordB) << "\" to ";
     coordB.print();
-    cout << endl;
+    cout << "\n";
 }
 
 Lawn& Game::getLawn() {
