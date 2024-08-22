@@ -30,17 +30,57 @@ void Game::summonZombie(std::mt19937& rng) {
     int tileIndex = 9;
 
     Coordinate zombieCoord = Coordinate(laneIndex, tileIndex);
-    Zombie newZombie = Zombie(zombieCoord, 5); // Example HP
+    auto newZombie = std::make_shared<Zombie>(zombieCoord, 5); // Example HP value
     
     if (lawn.getSymbol(zombieCoord) == " ") {
-        // Create a new Zombie and place it on the lawn
-        Zombie newZombie(zombieCoord, 100); // Example HP value
-        zombies.push_back(newZombie); // Add zombie to the game
-        lawn.replace(zombieCoord, "Z"); // Place zombie symbol on the lawn
+        // Place zombie on the lawn and add to zombies vector
+        zombies.push_back(newZombie);
+        lawn.replace(zombieCoord, "Z");
+
+        // Pass weak_ptr to the thread
+        std::weak_ptr<Zombie> weakZombie = newZombie;
+        std::thread zombieThread([this, weakZombie] {
+            while (true) {
+                if (auto zombie = weakZombie.lock()) { // Try to lock weak_ptr
+                    updateZombiePosition(zombie);
+                    std::this_thread::sleep_for(std::chrono::seconds(3));
+                } else {
+                    break; // Exit the loop if the zombie no longer exists
+                }
+            }
+        });
+        zombieThread.detach(); // Detach the thread if you don't need to join it later
     }
 }
 
-ref<Array<Zombie>> Game::getZombies() {
+void Game::updateZombiePosition(std::shared_ptr<Zombie> zombie) {
+    Coordinate oldLocation = zombie->getLocation();
+    Coordinate newLocation = oldLocation.left();
+    if (lawn.getSymbol(newLocation) == " ") {
+        lawn.replace(oldLocation, " "); // Clear old position
+        lawn.replace(newLocation, "Z"); // Place zombie in new position
+        zombie->moveLeft();
+    }
+}
+
+void Game::updateLawn() {
+    // std::thread updateThread([this] {
+    //     while (isRunning) {
+    //         std::cout << "Updating zombies..." << std::endl; // Debug output
+
+    //         for (auto& zombie : zombies) {
+    //             std::this_thread::sleep_for(std::chrono::seconds(1));
+    //             updateZombiePosition(zombie);
+    //         }
+
+    //         std::this_thread::sleep_for(std::chrono::seconds(3)); // Sleep for 3 seconds
+    //     }
+    // });
+
+    // updateThread.detach(); // Detach the thread if you don't need to join it later
+}
+
+Array<std::shared_ptr<Zombie>> Game::getZombies() {
     return zombies;
 }
 

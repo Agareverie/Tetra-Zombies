@@ -4,7 +4,25 @@ Zombie::Zombie(Coordinate loc, int initialHP)
     : location(loc), hp(initialHP) {}
 
 Zombie::~Zombie() {
-    // No dynamic resources to clean up
+    stop();
+}
+
+void Zombie::moveLeft() {
+    location = location.left();
+}
+
+void Zombie::start() {
+    running = true;
+    movementThread = std::thread(&Zombie::run, this);
+}
+
+void Zombie::stop() {
+    if (running) {
+        running = false;
+        if (movementThread.joinable()) {
+            movementThread.join();
+        }
+    }
 }
 
 Coordinate Zombie::getLocation() const {
@@ -26,6 +44,9 @@ void Zombie::takeDamage(int damage) {
 bool Zombie::isDead() const {
     return hp <= 0;
 }
+bool Zombie::isAlive() const {
+    return hp > 0;
+}
 
 char Zombie::getSymbol() const {
     switch (isDead()) {
@@ -33,5 +54,12 @@ char Zombie::getSymbol() const {
             return ' ';
         case false:
             return 'Z';
+    }
+}
+
+void Zombie::run() {
+    while (running) {
+        moveLeft(); // Move zombie to the left
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     }
 }

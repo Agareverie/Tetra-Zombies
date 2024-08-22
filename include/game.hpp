@@ -14,6 +14,7 @@
 #include <chrono>
 #include <atomic>
 #include <mutex>
+#include <memory>
 #include <random>
 
 
@@ -26,12 +27,12 @@ private:
     std::atomic<bool> isRunning;
     std::mutex sunMutex;
     int sun;
-    Array<Zombie> zombies;  // Container to manage zombies
+    Array<std::shared_ptr<Zombie>> zombies;  // Container to manage zombies
 
 public:
     Game();  // Constructor
     ~Game();
-    Lawn& getLawn(); // Add this method if needed
+    
 
 public:
     void start();
@@ -40,7 +41,10 @@ public:
     virtual void incrementSunCount();
     int getSun();
     void summonZombie(std::mt19937& rng);
-    ref<Array<Zombie>> getZombies();
+    Array<std::shared_ptr<Zombie>> getZombies();
+    void updateZombiePosition(std::shared_ptr<Zombie> zombie);
+    void updateLawn();
+    Lawn& getLawn(); // Add this method if needed
 
     void place(Lawn& lawn, ref<Coordinate> coord, ref<str> symbol);
     void shovelTile(Lawn& lawn, ref<Coordinate> coord);
