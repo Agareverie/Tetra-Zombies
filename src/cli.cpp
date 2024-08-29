@@ -218,6 +218,7 @@ void CLI::plant(Coordinate& navigator, ref<str> symbol) {
         Time::sleep(0.25);
     } else {
         game.getLawn().replace(navigator, symbol);
+        game.cherryBombExplodes();
         printInterface();
     }
 }
@@ -233,7 +234,7 @@ void CLI::shovel(Coordinate& navigator) {
         cout << "Cannot shovel the lawn mower at this spot.\n";
         Time::sleep(0.25);
     } else {
-        lawn.replace(navigator, " "); // Remove the symbol
+        game.getLawn().replace(navigator, " "); // Remove the symbol
         printInterface();
     }
 }
@@ -295,8 +296,7 @@ void CLI::run() {
     std::mt19937 rng(rd());
 
     // Summon zombies at random intervals or events
-    game.summonZombie(rng);
-    game.summonZombie(rng);
+    game.startZombieSpawner(rng);
     bool running = true;
 
     while (running) {

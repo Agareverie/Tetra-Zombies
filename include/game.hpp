@@ -28,6 +28,8 @@ private:
     std::mutex sunMutex;
     int sun;
     Array<std::shared_ptr<Zombie>> zombies;  // Container to manage zombies
+    std::mutex zombieMutex;
+    bool cherryBombExploding = false;
 
 public:
     Game();  // Constructor
@@ -43,13 +45,12 @@ public:
     void summonZombie(std::mt19937& rng);
     Array<std::shared_ptr<Zombie>> getZombies();
     void updateZombiePosition(std::shared_ptr<Zombie> zombie);
-    void updateLawn();
+    void removeZombie(std::shared_ptr<Zombie> zombie);
     Lawn& getLawn(); // Add this method if needed
 
-    void place(Lawn& lawn, ref<Coordinate> coord, ref<str> symbol);
-    void shovelTile(Lawn& lawn, ref<Coordinate> coord);
-    // Game wrappers for Lawn
-    void swap(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB);
+    void startZombieSpawner(std::mt19937& rng);
+    void cherryBombExplodes();
+    void removeZombieAtCoordinate(ref<Coordinate> coord);
     void trail(Lawn& lawn, ref<Coordinate> coordA, ref<Coordinate> coordB);
 };
 

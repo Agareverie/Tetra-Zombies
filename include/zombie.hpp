@@ -36,6 +36,7 @@ private:
     int hp;
     std::thread movementThread;
     bool running = false;
+    bool moving = true; 
 
     void run();
 };

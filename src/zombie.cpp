@@ -17,6 +17,8 @@ void Zombie::start() {
 }
 
 void Zombie::stop() {
+    hp = 0;
+    moving = false; 
     if (running) {
         running = false;
         if (movementThread.joinable()) {
